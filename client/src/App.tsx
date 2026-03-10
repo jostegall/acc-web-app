@@ -1,62 +1,58 @@
-import { useEffect, useState } from 'react';
-import { Alert, Box, CircularProgress, Container, Paper, Typography } from '@mui/material';
-import { fetchHealth, type HealthResponse } from './services/api';
+import {useState} from 'react';
+import { Alert, Box, Container, Paper, Stack } from '@mui/material';
+import Header from './components/Header';
+import PhraseInput from './components/PhraseInput';
+import SpeakButton from './components/SpeakButton';
+import PhraseGrid from './components/PhraseGrid';
+import { commonPhrases } from './data/phrases';
 
-function App () {
-  const [health, setHealth] = useState<HealthResponse | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  const [error, setError] = useState<string>('');
+function App() {
+  const [currentPhrase, setCurrentPhrase] = useState<string>('');
+  const [message, setMessage] = useState<string>('');
 
-  useEffect(() => {
-    async function loadHealth() {
-      try {
-        setLoading(true);
-        setError('');
-
-        const data = await fetchHealth();
-        setHealth(data);
-      } catch (err: unknown) {
-        if (err instanceof Error) {
-          setError(err.message);
-        } else {
-          setError('Unidentifiable Error: something went wrong.');
-        }
-      } finally {
-        setLoading(false);
-      }
+  function handleSpeakClick() {
+    if (!currentPhrase.trim()) {
+      setMessage('Please enter or select a phrase first.');
+      return;
     }
+    setMessage(`Ready to speak: "${currentPhrase}`);
+  }
 
-    loadHealth();
-  }, []);
+  function handlePhraseSelect(phrase: string) {
+    setCurrentPhrase(phrase);
+    setMessage('');
+  }
+
+  function handlePhraseChange(value: string) {
+    setCurrentPhrase(value);
+    setMessage('');
+  }
 
   return (
-    <Container maxWidth='md' sx={{ py: 4}}>
+    <Container maxWidth='md' sx={{ px: 4 }}>
       <Paper elevation={3} sx={{ p: 4, borderRadius: 3}}>
-        <Typography variant='h4' component='h1' gutterBottom>
-          AAC Communication App
-        </Typography>
+        <Header />
 
-        <Typography variant='body1' sx={{ mb: 2}}>
-          v1.1 Project setup and backend connection test
-        </Typography>
+        <Stack spacing={3}>
+          <PhraseInput value={currentPhrase} onChange={handlePhraseChange} />
 
-        {loading && (
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-            <CircularProgress size={24} />
-            <Typography>Checking backend status...</Typography>
+          <Box>
+            <SpeakButton 
+              onClick={handleSpeakClick}
+              disabled={!currentPhrase.trim()}
+            />
           </Box>
-        )}
 
-        {error && <Alert severity='error'>{error}</Alert>}
+          {message && <Alert severity='info'>{message}</Alert>}
 
-        {health && !loading && (
-          <Alert severity='success'>
-            Backend connected: {health.message}
-          </Alert>
-        )}
+          <PhraseGrid 
+            phrases={commonPhrases}
+            onPhraseSelect={handlePhraseSelect}
+          />
+        </Stack>
       </Paper>
     </Container>
-  )
+  );
 }
 
 export default App;
