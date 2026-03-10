@@ -6,7 +6,7 @@ export type Phrase = {
 export const commonPhrases: Phrase[] = [
     { id: 1, label: 'Hello' },
     { id: 2, label: 'Thank you' },
-    { id: 3, label: 'Please help me' },
+    { id: 3, label: 'I need assistance' },
     { id: 4, label: 'I need water' },
     { id: 5, label: 'I am hungry' },
     { id: 6, label: 'I am tired' },
