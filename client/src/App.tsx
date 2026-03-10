@@ -1,35 +1,62 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useEffect, useState } from 'react';
+import { Alert, Box, CircularProgress, Container, Paper, Typography } from '@mui/material';
+import { fetchHealth, type HealthResponse } from './services/api';
 
-function App() {
-  const [count, setCount] = useState(0)
+function App () {
+  const [health, setHealth] = useState<HealthResponse | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string>('');
+
+  useEffect(() => {
+    async function loadHealth() {
+      try {
+        setLoading(true);
+        setError('');
+
+        const data = await fetchHealth();
+        setHealth(data);
+      } catch (err: unknown) {
+        if (err instanceof Error) {
+          setError(err.message);
+        } else {
+          setError('Unidentifiable Error: something went wrong.');
+        }
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadHealth();
+  }, []);
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+    <Container maxWidth='md' sx={{ py: 4}}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 3}}>
+        <Typography variant='h4' component='h1' gutterBottom>
+          AAC Communication App
+        </Typography>
+
+        <Typography variant='body1' sx={{ mb: 2}}>
+          v1.1 Project setup and backend connection test
+        </Typography>
+
+        {loading && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+            <CircularProgress size={24} />
+            <Typography>Checking backend status...</Typography>
+          </Box>
+        )}
+
+        {error && <Alert severity='error'>{error}</Alert>}
+
+        {health && !loading && (
+          <Alert severity='success'>
+            Backend connected: {health.message}
+          </Alert>
+        )}
+      </Paper>
+    </Container>
   )
 }
 
-export default App
+export default App;
