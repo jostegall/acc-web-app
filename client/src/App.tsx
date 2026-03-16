@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, Box, Container, Paper, Stack } from '@mui/material';
+import { Alert, Box, Container, Divider, Paper, Stack } from '@mui/material';
 import Header from './components/Header';
 import PhraseInput from './components/PhraseInput';
 import SpeakButton from './components/SpeakButton';
@@ -64,7 +64,7 @@ function App() {
 
       setStatusMessage(
         result.cached
-          ? 'Speech played successfully (served from cache).'
+          ? 'Speech played successfully. Audio was served from cache.'
           : 'Speech played successfully.'
       );
     } catch (err: unknown) {
@@ -91,24 +91,38 @@ function App() {
   }
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
-        <Header />
+    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 5 } }}>
+      <Paper elevation={4} sx={{ p: { xs: 3, sm: 4 }, borderRadius: 4 }}>
+        <Stack spacing={4}>
+          <Header />
 
-        <Stack spacing={3}>
-          <PhraseInput value={currentPhrase} onChange={handlePhraseChange} />
+          <Box component="section" aria-labelledby="phrase-builder-heading">
+            <Stack spacing={2.5}>
+              <PhraseInput
+                value={currentPhrase}
+                onChange={handlePhraseChange}
+                onSubmit={handleSpeakClick}
+              />
 
-          <Box>
-            <SpeakButton
-              onClick={handleSpeakClick}
-              disabled={!currentPhrase.trim()}
-              loading={loading}
-            />
+              <Box>
+                <SpeakButton
+                  onClick={handleSpeakClick}
+                  disabled={!currentPhrase.trim()}
+                  loading={loading}
+                />
+              </Box>
+
+              <Box aria-live="polite" aria-atomic="true">
+                {error && <Alert severity="error">{error}</Alert>}
+
+                {statusMessage && !error && (
+                  <Alert severity="success">{statusMessage}</Alert>
+                )}
+              </Box>
+            </Stack>
           </Box>
 
-          {error && <Alert severity="error">{error}</Alert>}
-
-          {statusMessage && <Alert severity="success">{statusMessage}</Alert>}
+          <Divider />
 
           <PhraseGrid
             phrases={commonPhrases}
