@@ -1,51 +1,116 @@
-import {useState} from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Alert, Box, Container, Paper, Stack } from '@mui/material';
 import Header from './components/Header';
 import PhraseInput from './components/PhraseInput';
 import SpeakButton from './components/SpeakButton';
 import PhraseGrid from './components/PhraseGrid';
 import { commonPhrases } from './data/phrases';
+import { requestSpeech, type TtsResponse } from './services/api';
+import { createAudioUrlFromBase64 } from './utils/audio';
 
 function App() {
   const [currentPhrase, setCurrentPhrase] = useState<string>('');
-  const [message, setMessage] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
+  const [error, setError] = useState<string>('');
+  const [statusMessage, setStatusMessage] = useState<string>('');
+  const audioUrlRef = useRef<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  function handleSpeakClick() {
-    if (!currentPhrase.trim()) {
-      setMessage('Please enter or select a phrase first.');
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+      }
+    };
+  }, []);
+
+  async function handleSpeakClick() {
+    const trimmedPhrase = currentPhrase.trim();
+
+    if (!trimmedPhrase) {
+      setError('Please enter or select a phrase first.');
+      setStatusMessage('');
       return;
     }
-    setMessage(`Ready to speak: "${currentPhrase}`);
+
+    try {
+      setLoading(true);
+      setError('');
+      setStatusMessage('');
+
+      const result: TtsResponse = await requestSpeech({
+        text: trimmedPhrase,
+      });
+
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current);
+      }
+
+      const audioUrl = createAudioUrlFromBase64(result.audioContent);
+      audioUrlRef.current = audioUrl;
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      await audio.play();
+
+      setStatusMessage(
+        result.cached
+          ? 'Speech played successfully (served from cache).'
+          : 'Speech played successfully.'
+      );
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('Something went wrong while generating speech.');
+      }
+    } finally {
+      setLoading(false);
+    }
   }
 
   function handlePhraseSelect(phrase: string) {
     setCurrentPhrase(phrase);
-    setMessage('');
+    setError('');
+    setStatusMessage('');
   }
 
   function handlePhraseChange(value: string) {
     setCurrentPhrase(value);
-    setMessage('');
+    setError('');
+    setStatusMessage('');
   }
 
   return (
-    <Container maxWidth='md' sx={{ px: 4 }}>
-      <Paper elevation={3} sx={{ p: 4, borderRadius: 3}}>
+    <Container maxWidth="md" sx={{ py: 4 }}>
+      <Paper elevation={3} sx={{ p: 4, borderRadius: 3 }}>
         <Header />
 
         <Stack spacing={3}>
           <PhraseInput value={currentPhrase} onChange={handlePhraseChange} />
 
           <Box>
-            <SpeakButton 
+            <SpeakButton
               onClick={handleSpeakClick}
               disabled={!currentPhrase.trim()}
+              loading={loading}
             />
           </Box>
 
-          {message && <Alert severity='info'>{message}</Alert>}
+          {error && <Alert severity="error">{error}</Alert>}
 
-          <PhraseGrid 
+          {statusMessage && <Alert severity="success">{statusMessage}</Alert>}
+
+          <PhraseGrid
             phrases={commonPhrases}
             onPhraseSelect={handlePhraseSelect}
           />

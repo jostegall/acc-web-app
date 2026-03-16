@@ -1,22 +1,27 @@
-import { Button } from '@mui/material';
+import { Button, CircularProgress } from '@mui/material';
 import VolumeUpIcon from '@mui/icons-material/VolumeUp';
 
 type SpeakButtonProps = {
     disabled?: boolean;
+    loading?: boolean;
     onClick: () => void;
 }
 
-function SpeakButton({ disabled = false, onClick }: SpeakButtonProps) {
+function SpeakButton({ 
+    disabled = false, 
+    loading = false,
+    onClick 
+}: SpeakButtonProps) {
     return (
         <Button 
             variant='contained'
             size='large'
-            startIcon={<VolumeUpIcon />}
+            startIcon={!loading ? <VolumeUpIcon /> : undefined}
             onClick={onClick}
-            disabled={disabled}
+            disabled={disabled || loading}
             sx={{ minHeight: 56 }}
         >
-            Speak
+            {loading ? <CircularProgress size={24} color='inherit' /> : 'Speak'}
         </Button>
     );
 }
