@@ -1,5 +1,7 @@
 # AAC Communication Web App
 
+Visit the site [here](https://acc-communication.vercel.app/)
+
 An accessibility-focused web application that allows users to quickly generate speech from typed or preset phrases.
 
 The applicaiton use Google Cloud Text-to-Speech for audio generation and Redis caching to improve response times and reduce repeated API calls.
